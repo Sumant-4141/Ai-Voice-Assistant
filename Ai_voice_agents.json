@@ -1,0 +1,228 @@
+{
+  "name": "Ai_voice_agent",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        -64
+      ],
+      "id": "dbcf08e9-0145-40c3-b77b-075f5a5d54bd",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1A6qGXEA_9X962TJs-LM-46ufNqe6O1s8xw3u0eoFHGc",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1A6qGXEA_9X962TJs-LM-46ufNqe6O1s8xw3u0eoFHGc/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -192,
+        -64
+      ],
+      "id": "771e4fca-cccd-49b0-b1c1-83e7eef9b884",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "6NnbwJrecmP0ngvt",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.retellai.com/v2/create-phone-call",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"from_number\": \"+12299494570\",\n  \"to_number\":\"+91{{ $json['phone_number']}}\",\n  \"retell_llm_dynamic_variables\": {\"name\":\"{{$json['Name']}}\",\n  \"phone_number\": \"{{$json['phone_number']}}\",\n  \"email\":\"{{$json.Email}}\",\n  \"last_visitdon\":\"{{$json['last_visit']}}\",\n  \"details\":\"{{$json.details}}\"\n   },\n\n\"override_agent_id\":\"agent_3a99e697ce4561b420b2a2a369\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        16,
+        -64
+      ],
+      "id": "cae80501-d279-4f41-a9c5-341b747f1354",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "UIHjd03aAddWGRJU",
+          "name": "Custom Auth account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "path": "upsell",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -464,
+        272
+      ],
+      "id": "f8d83f41-8459-41e1-b2a9-9dc33ad85bf2",
+      "name": "Webhook",
+      "webhookId": "414f4a61-f1aa-4c2d-866e-dcf9146c3fca"
+    },
+    {
+      "parameters": {
+        "options": {
+          "summarizationMethodAndPrompts": {
+            "values": {}
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainSummarization",
+      "typeVersion": 2.1,
+      "position": [
+        -256,
+        272
+      ],
+      "id": "f4eb25be-9857-4aa4-b6ff-b748701b79d2",
+      "name": "Summarization Chain"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -336,
+        480
+      ],
+      "id": "b25e1846-2d93-43b0-9e0e-4be57d748a04",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "BRQ6qIkhILVWZx49",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "",
+          "mode": "id",
+          "cachedResultName": "",
+          "cachedResultUrl": ""
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        96,
+        272
+      ],
+      "id": "2d676bbb-e333-4ba6-a45e-aea0ca266751",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "6NnbwJrecmP0ngvt",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Summarization Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Summarization Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarization Chain": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "858a822b-db78-498d-b7c8-3f09a68365ef",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6aa7ea1e76878045adea24080932d378160d3fbbc8403502aea7a2ca64e99a78"
+  },
+  "nodeGroups": [],
+  "id": "oAhWTSJD06ghKzHn",
+  "tags": []
+}
